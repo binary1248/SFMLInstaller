@@ -6,7 +6,7 @@ What is SFMLInstaller?
 
 SFMLInstaller is, as its name implies an installer for SFML.
 
-It has been developed by binay1248 to reduce the amount of meaningless SFML
+It has been developed by binary1248 to reduce the amount of meaningless SFML
 forum posts about library incompatibilities by people who don't bother trying
 to build SFML by themselves and/or fail trying to do so.
 
