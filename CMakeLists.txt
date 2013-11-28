@@ -73,6 +73,7 @@ if( APPLE )
 endif()
 
 set( GNUCXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wunused-parameter -Wno-long-long -Wunreachable-code -Wredundant-decls -Wcast-align -Wfloat-equal -Wformat=2 -Wmissing-declarations -Woverlength-strings -pedantic" )
+set( GNULD_FLAGS "" )
 
 if( SFMLInstaller_USE_STATIC_STD_LIBS )
 	if( MSVC )
@@ -82,7 +83,7 @@ if( SFMLInstaller_USE_STATIC_STD_LIBS )
 			endif()
 		endforeach()
 	elseif( CMAKE_COMPILER_IS_GNUCXX )
-		set( GNUCXX_FLAGS "${GNUCXX_FLAGS} -static" )
+		set( GNULD_FLAGS "-static" )
 	endif()
 endif()
 
@@ -96,6 +97,7 @@ if( CMAKE_COMPILER_IS_GNUCXX )
 	endif()
 	
 	set_source_files_properties( ${SOURCES} PROPERTIES COMPILE_FLAGS ${GNUCXX_FLAGS} )
+	set_target_properties( SFMLInstaller PROPERTIES LINK_FLAGS ${GNULD_FLAGS} )
 endif()
 
 target_link_libraries( SFMLInstaller ${SFNUL_LIBRARY} ${SFGUI_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} )
