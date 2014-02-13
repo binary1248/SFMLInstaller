@@ -48,15 +48,48 @@ bool TryExecute( const std::string& executable, bool show ) {
 	return false;
 }
 
-std::string GetPathFromUser( const std::string& executable ) {
+std::string GetPathFromUser( const std::vector<std::string>& executables ) {
+	auto strTitle = std::string{ "Where is " };
+
+	if( executables.empty() ) {
+		std::cout << "No filter specified.\n";
+		return "";
+	}
+	else if( executables.size() == 1 ) {
+		strTitle += executables.front();
+	}
+	else {
+		auto end = std::end( executables );
+		for( auto iter = std::begin( executables ); ; ) {
+			strTitle += *iter;
+
+			++iter;
+
+			if( iter != end ) {
+				strTitle += " or ";
+			}
+			else {
+				break;
+			}
+		}
+	}
+
+	strTitle += "?";
+
+	auto strFilter = std::string{ "" };
+
+	for( const auto& e : executables ) {
+		strFilter += e + '\0' + e + '\0';
+	}
+
 	auto filename = CreateZeroed<TCHAR, 65536>();
 	auto open_filename = CreateZeroed<OPENFILENAME>();
 
 	open_filename.lStructSize = sizeof( OPENFILENAME );
-	open_filename.lpstrFilter = ( executable + '\0' + executable + '\0' + '\0' ).c_str();
+	open_filename.lpstrFilter = strFilter.c_str();
 	open_filename.lpstrFile = filename.data();
 	open_filename.nMaxFile = filename.size();
-	open_filename.lpstrTitle = ( std::string( "Where is " ) + executable + "?" ).c_str();
+	open_filename.lpstrTitle = strTitle.c_str();
 	open_filename.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 
 	auto working_directory = GetWorkingDirectory();

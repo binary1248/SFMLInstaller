@@ -21,7 +21,7 @@ std::string GetMakePath( bool probe ) {
 		return make_path;
 	}
 	else if( !probe ) {
-		make_path = GetPathFromUser( "make.exe" );
+		make_path = GetPathFromUser( { "make.exe", "mingw32-make.exe" } );
 	}
 	else {
 		return "";

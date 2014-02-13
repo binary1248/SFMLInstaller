@@ -21,7 +21,7 @@ std::string GetCMakePath( bool probe ) {
 		return cmake_path;
 	}
 	else if( !probe ) {
-		cmake_path = GetPathFromUser( "cmake.exe" );
+		cmake_path = GetPathFromUser( { "cmake.exe" } );
 	}
 	else {
 		return "";

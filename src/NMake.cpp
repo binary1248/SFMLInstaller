@@ -23,7 +23,7 @@ std::string GetNMakePath( bool probe ) {
 		return nmake_path;
 	}
 	else if( !probe ) {
-		nmake_path = GetPathFromUser( "vsvars32.bat" );
+		nmake_path = GetPathFromUser( { "vsvars32.bat" } );
 	}
 	else {
 		return "";
