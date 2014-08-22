@@ -77,7 +77,7 @@ void SFMLInstaller::Process() {
 	const static std::string debug_settings = "-D CMAKE_BUILD_TYPE:STRING=Debug ";
 	const static std::string release_settings = "-D CMAKE_BUILD_TYPE:STRING=Release ";
 
-	std::string install_prefix = "-D CMAKE_INSTALL_PREFIX:PATH=" + install_location + " ";
+	std::string install_prefix = "-D CMAKE_INSTALL_PREFIX:PATH=\"" + install_location + "\" ";
 	std::string settings = default_settings + install_prefix;
 
 ////////////////////////////////////////////////////////////////////////////////

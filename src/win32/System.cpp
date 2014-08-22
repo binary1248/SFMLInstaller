@@ -37,9 +37,15 @@ bool CreateDirectoryIfRequired( const std::string& directory ) {
 }
 
 bool TryExecute( const std::string& executable, bool show ) {
-	auto result = reinterpret_cast<int>( ShellExecute( nullptr, "open", executable.c_str(), "", nullptr, show ? SW_SHOW : SW_HIDE ) );
+	auto appended_executable = executable;
 
-	std::cout << "Trying to execute " << executable << ": " << result << "\n";
+	if( ( appended_executable.find( ".exe" ) == std::string::npos ) && ( appended_executable.find( ".bat" ) == std::string::npos ) ) {
+		appended_executable += ".exe";
+	}
+
+	auto result = reinterpret_cast<int>( ShellExecute( nullptr, "open", appended_executable.c_str(), "", nullptr, show ? SW_SHOW : SW_HIDE ) );
+
+	std::cout << "Trying to execute " << appended_executable << ": " << result << "\n";
 
 	if( result > 32 ) {
 		return true;

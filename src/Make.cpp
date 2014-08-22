@@ -12,6 +12,24 @@ std::string GetMakePath( bool probe ) {
 		return make_path;
 	}
 	else {
+		make_path = ( TryExecute( "mingw32-make" ) ? "mingw32-make" : "" );
+	}
+
+	if( !make_path.empty() ) {
+		std::cout << "make found through PATH.\n";
+		std::cout << make_path << "\n";
+		return make_path;
+	}
+	else {
+		make_path = ( TryExecute( "mingw64-make" ) ? "mingw64-make" : "" );
+	}
+
+	if( !make_path.empty() ) {
+		std::cout << "make found through PATH.\n";
+		std::cout << make_path << "\n";
+		return make_path;
+	}
+	else {
 		make_path = GetMakePathFromIntrospection();
 	}
 

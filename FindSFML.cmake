@@ -60,12 +60,6 @@ if(SFML_STATIC_LIBRARIES)
     add_definitions(-DSFML_STATIC)
 endif()
 
-# deduce the libraries suffix from the options
-set(FIND_SFML_LIB_SUFFIX "")
-if(SFML_STATIC_LIBRARIES)
-    set(FIND_SFML_LIB_SUFFIX "${FIND_SFML_LIB_SUFFIX}-s")
-endif()
-
 # define the list of search paths for headers and libraries
 set(FIND_SFML_PATHS
     ${SFML_ROOT}
@@ -124,24 +118,62 @@ set(SFML_FOUND TRUE) # will be set to false if one of the required modules is no
 foreach(FIND_SFML_COMPONENT ${SFML_FIND_COMPONENTS})
     string(TOLOWER ${FIND_SFML_COMPONENT} FIND_SFML_COMPONENT_LOWER)
     string(TOUPPER ${FIND_SFML_COMPONENT} FIND_SFML_COMPONENT_UPPER)
-    set(FIND_SFML_COMPONENT_NAME sfml-${FIND_SFML_COMPONENT_LOWER}${FIND_SFML_LIB_SUFFIX})
+    set(FIND_SFML_COMPONENT_NAME sfml-${FIND_SFML_COMPONENT_LOWER})
 
     # no suffix for sfml-main, it is always a static library
     if(FIND_SFML_COMPONENT_LOWER STREQUAL "main")
-        set(FIND_SFML_COMPONENT_NAME sfml-${FIND_SFML_COMPONENT_LOWER})
+        # release library
+        find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE
+                     NAMES ${FIND_SFML_COMPONENT_NAME}
+                     PATH_SUFFIXES lib64 lib
+                     PATHS ${FIND_SFML_PATHS})
+
+        # debug library
+        find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG
+                     NAMES ${FIND_SFML_COMPONENT_NAME}-d
+                     PATH_SUFFIXES lib64 lib
+                     PATHS ${FIND_SFML_PATHS})
+    else()
+        # static release library
+        find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_STATIC_RELEASE
+                     NAMES ${FIND_SFML_COMPONENT_NAME}-s
+                     PATH_SUFFIXES lib64 lib
+                     PATHS ${FIND_SFML_PATHS})
+
+        # static debug library
+        find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_STATIC_DEBUG
+                     NAMES ${FIND_SFML_COMPONENT_NAME}-s-d
+                     PATH_SUFFIXES lib64 lib
+                     PATHS ${FIND_SFML_PATHS})
+
+        # dynamic release library
+        find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DYNAMIC_RELEASE
+                     NAMES ${FIND_SFML_COMPONENT_NAME}
+                     PATH_SUFFIXES lib64 lib
+                     PATHS ${FIND_SFML_PATHS})
+
+        # dynamic debug library
+        find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DYNAMIC_DEBUG
+                     NAMES ${FIND_SFML_COMPONENT_NAME}-d
+                     PATH_SUFFIXES lib64 lib
+                     PATHS ${FIND_SFML_PATHS})
+
+        if(SFML_STATIC_LIBRARIES)
+            if(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_STATIC_RELEASE)
+                set(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE ${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_STATIC_RELEASE})
+            endif()
+            if(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_STATIC_DEBUG)
+                set(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG ${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_STATIC_DEBUG})
+            endif()
+        else()
+            if(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DYNAMIC_RELEASE)
+                set(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE ${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DYNAMIC_RELEASE})
+            endif()
+            if(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DYNAMIC_DEBUG)
+                set(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG ${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DYNAMIC_DEBUG})
+            endif()
+        endif()
     endif()
-
-    # debug library
-    find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG
-                 NAMES ${FIND_SFML_COMPONENT_NAME}-d
-                 PATH_SUFFIXES lib64 lib
-                 PATHS ${FIND_SFML_PATHS})
-
-    # release library
-    find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE
-                 NAMES ${FIND_SFML_COMPONENT_NAME}
-                 PATH_SUFFIXES lib64 lib
-                 PATHS ${FIND_SFML_PATHS})
 
     if (SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG OR SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE)
         # library found
@@ -175,7 +207,11 @@ foreach(FIND_SFML_COMPONENT ${SFML_FIND_COMPONENTS})
     # mark as advanced
     MARK_AS_ADVANCED(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY
                      SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE
-                     SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG)
+                     SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG
+                     SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_STATIC_RELEASE
+                     SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_STATIC_DEBUG
+                     SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DYNAMIC_RELEASE
+                     SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DYNAMIC_DEBUG)
 
     # add to the global list of libraries
     set(SFML_LIBRARIES ${SFML_LIBRARIES} "${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY}")
@@ -222,7 +258,7 @@ if(SFML_STATIC_LIBRARIES)
         if(FIND_SFML_OS_WINDOWS)
             set(SFML_SYSTEM_DEPENDENCIES "winmm")
         endif()
-        set(SFML_DEPENDENCIES ${SFML_DEPENDENCIES} ${SFML_SYSTEM_DEPENDENCIES})
+        set(SFML_DEPENDENCIES ${SFML_SYSTEM_DEPENDENCIES} ${SFML_DEPENDENCIES})
     endif()
 
     # sfml-network
@@ -233,7 +269,7 @@ if(SFML_STATIC_LIBRARIES)
         if(FIND_SFML_OS_WINDOWS)
             set(SFML_NETWORK_DEPENDENCIES "ws2_32")
         endif()
-        set(SFML_DEPENDENCIES ${SFML_DEPENDENCIES} ${SFML_NETWORK_DEPENDENCIES})
+        set(SFML_DEPENDENCIES ${SFML_NETWORK_DEPENDENCIES} ${SFML_DEPENDENCIES})
     endif()
 
     # sfml-window
@@ -255,9 +291,9 @@ if(SFML_STATIC_LIBRARIES)
                 set(SFML_WINDOW_DEPENDENCIES ${SFML_WINDOW_DEPENDENCIES} "usbhid")
             endif()
         elseif(FIND_SFML_OS_MACOSX)
-            set(SFML_WINDOW_DEPENDENCIES ${SFML_WINDOW_DEPENDENCIES} "GL" "-framework Foundation -framework AppKit -framework IOKit -framework Carbon")
+            set(SFML_WINDOW_DEPENDENCIES ${SFML_WINDOW_DEPENDENCIES} "-framework OpenGL -framework Foundation -framework AppKit -framework IOKit -framework Carbon")
         endif()
-        set(SFML_DEPENDENCIES ${SFML_DEPENDENCIES} ${SFML_WINDOW_DEPENDENCIES})
+        set(SFML_DEPENDENCIES ${SFML_WINDOW_DEPENDENCIES} ${SFML_DEPENDENCIES})
     endif()
 
     # sfml-graphics
@@ -271,7 +307,7 @@ if(SFML_STATIC_LIBRARIES)
 
         # update the list
         set(SFML_GRAPHICS_DEPENDENCIES ${FREETYPE_LIBRARY} ${GLEW_LIBRARY} ${JPEG_LIBRARY})
-        set(SFML_DEPENDENCIES ${SFML_DEPENDENCIES} ${SFML_GRAPHICS_DEPENDENCIES})
+        set(SFML_DEPENDENCIES ${SFML_GRAPHICS_DEPENDENCIES} ${SFML_DEPENDENCIES})
     endif()
 
     # sfml-audio
@@ -284,7 +320,7 @@ if(SFML_STATIC_LIBRARIES)
 
         # update the list
         set(SFML_AUDIO_DEPENDENCIES ${OPENAL_LIBRARY} ${SNDFILE_LIBRARY})
-        set(SFML_DEPENDENCIES ${SFML_DEPENDENCIES} ${SFML_AUDIO_DEPENDENCIES})
+        set(SFML_DEPENDENCIES ${SFML_AUDIO_DEPENDENCIES} ${SFML_DEPENDENCIES})
     endif()
 
 endif()

@@ -6,9 +6,9 @@ endif()
 
 project( SFMLInstaller )
 
-set( SFML_STATIC_LIBRARIES TRUE CACHE BOOL "Choose the link type for SFML" FORCE )
-set( SFGUI_STATIC_LIBRARIES TRUE CACHE BOOL "Choose the link type for SFGUI" FORCE )
-set( SFNUL_STATIC_LIBRARIES TRUE CACHE BOOL "Choose the link type for SFNUL" FORCE )
+set( SFML_STATIC_LIBRARIES TRUE CACHE BOOL "Choose the link type for SFML" )
+set( SFGUI_STATIC_LIBRARIES TRUE CACHE BOOL "Choose the link type for SFGUI" )
+set( SFNUL_STATIC_LIBRARIES TRUE CACHE BOOL "Choose the link type for SFNUL" )
 
 if( MSVC OR CMAKE_COMPILER_IS_GNUCXX )
 	set( SFMLInstaller_USE_STATIC_STD_LIBS TRUE CACHE BOOL "True to link the runtime library statically, false to link them dynamically." )

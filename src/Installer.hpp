@@ -3,6 +3,7 @@
 #include <atomic>
 #include <SFML/Window.hpp>
 #include <SFGUI/SFGUI.hpp>
+#include <SFGUI/Widgets.hpp>
 #include <SFNUL.hpp>
 
 class Installer {

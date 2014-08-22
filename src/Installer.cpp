@@ -6,6 +6,7 @@
 #include <CMake.hpp>
 #include <Make.hpp>
 #include <NMake.hpp>
+#include <SFML/OpenGL.hpp>
 
 Installer::Installer() {
 	sfn::Start();
@@ -310,7 +311,7 @@ void Installer::GetCompiler() {
 			}
 		}
 		else if( msvc_nmake_radio->IsActive() ) {
-			m_vsvars_exec = GetNMakePath();
+			m_vsvars_exec = GetVSVarsPath();
 
 			if( !m_vsvars_exec.empty() ) {
 				m_vsvars_exec = std::string( "\"" ) + m_vsvars_exec + "\" && ";
