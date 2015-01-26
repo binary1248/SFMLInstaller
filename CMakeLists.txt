@@ -107,3 +107,8 @@ if( WIN32 )
 elseif( APPLE )
 	target_link_libraries( SFMLInstaller ${COREFOUNDATION_LIBRARY} )
 endif()
+
+install(
+	TARGETS SFMLInstaller
+	RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT SFMLInstaller
+)
