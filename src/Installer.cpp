@@ -35,7 +35,7 @@ Installer::Installer() {
 		"vEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfzAIJ9VNep\r\n"
 		"+OkuE6N36B9K\r\n"
 		"-----END CERTIFICATE-----\r\n"
-	) );
+	), "*github.com" );
 
 	m_working_directory = GetWorkingDirectory();
 }
