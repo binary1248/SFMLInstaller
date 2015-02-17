@@ -1,0 +1,2 @@
+* text=auto eol=lf
+src/miniz.c -text -eol linguist-vendored
