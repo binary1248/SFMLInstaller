@@ -1,12 +1,14 @@
-#include <cstdlib>
-#include <iostream>
 #include <NMake.hpp>
 #include <System.hpp>
+#include <cstdlib>
+#include <iostream>
 
-std::string GetVSVarsPathFromEnvVar();
+namespace nmake {
 
-std::string GetVSVarsPath( bool probe ) {
-	std::string vsvars_path = ( TryExecute( "vsvars32.bat" ) ? "vsvars32.bat" : "" );
+std::string get_vs_vars_path_from_env_var();
+
+std::string get_vs_vars_path( bool probe ) {
+	std::string vsvars_path = ( sys::try_execute( "vsvars32.bat" ) ? "vsvars32.bat" : "" );
 
 	if( !vsvars_path.empty() ) {
 		std::cout << "vsvars32.bat found through PATH.\n";
@@ -14,7 +16,7 @@ std::string GetVSVarsPath( bool probe ) {
 		return vsvars_path;
 	}
 	else {
-		vsvars_path = GetVSVarsPathFromEnvVar();
+		vsvars_path = get_vs_vars_path_from_env_var();
 	}
 
 	if( !vsvars_path.empty() ) {
@@ -23,7 +25,7 @@ std::string GetVSVarsPath( bool probe ) {
 		return vsvars_path;
 	}
 	else if( !probe ) {
-		vsvars_path = GetPathFromUser( { "vsvars32.bat" } );
+		vsvars_path = sys::get_path_from_user( { "vsvars32.bat" } );
 	}
 	else {
 		return "";
@@ -38,8 +40,8 @@ std::string GetVSVarsPath( bool probe ) {
 	return "";
 }
 
-std::string GetNMakePath( bool probe ) {
-	std::string nmake_path = ( TryExecute( "nmake" ) ? "nmake" : "" );
+std::string get_nmake_path( bool probe ) {
+	std::string nmake_path = ( sys::try_execute( "nmake" ) ? "nmake" : "" );
 
 	if( !nmake_path.empty() ) {
 		std::cout << "nmake found through PATH.\n";
@@ -47,7 +49,7 @@ std::string GetNMakePath( bool probe ) {
 		return nmake_path;
 	}
 	else {
-		nmake_path = GetVSVarsPathFromEnvVar();
+		nmake_path = get_vs_vars_path_from_env_var();
 	}
 
 	if( !nmake_path.empty() ) {
@@ -58,7 +60,7 @@ std::string GetNMakePath( bool probe ) {
 		return nmake_path;
 	}
 	else if( !probe ) {
-		nmake_path = GetPathFromUser( { "vsvars32.bat" } );
+		nmake_path = sys::get_path_from_user( { "vsvars32.bat" } );
 	}
 	else {
 		return "";
@@ -75,7 +77,7 @@ std::string GetNMakePath( bool probe ) {
 	return "";
 }
 
-std::string GetVSVarsPathFromEnvVar() {
+std::string get_vs_vars_path_from_env_var() {
 	std::string nmake_path;
 
 	auto try_get_env = [&]( const std::string& name ) {
@@ -88,7 +90,7 @@ std::string GetVSVarsPathFromEnvVar() {
 			std::string string_value = value;
 			string_value += "vsvars32.bat";
 
-			if( TryExecute( string_value ) ) {
+			if( sys::try_execute( string_value ) ) {
 				nmake_path = string_value;
 			}
 		}
@@ -120,4 +122,6 @@ std::string GetVSVarsPathFromEnvVar() {
 	}
 
 	return "";
+}
+
 }

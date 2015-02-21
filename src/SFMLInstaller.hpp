@@ -4,5 +4,5 @@
 
 class SFMLInstaller : public Installer {
 private:
-	virtual void Process() override;
+	void process() override;
 };

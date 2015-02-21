@@ -4,20 +4,24 @@
 #include <string>
 #include <vector>
 
-bool CreateDirectoryIfRequired( const std::string& directory );
+namespace sys {
 
-bool TryExecute( const std::string& executable, bool show = false );
+bool create_directory_if_required( const std::string& directory );
 
-std::string GetPathFromUser( const std::vector<std::string>& executables );
+bool try_execute( const std::string& executable, bool show = false );
 
-bool ConsoleExecute( const std::string& exec, const std::string& param, std::atomic_bool& completion_flag, std::atomic_bool& execution_flag );
+std::string get_path_from_user( const std::vector<std::string>& executables );
 
-std::string SelectDirectory( const std::string& caption );
+bool console_execute( const std::string& exec, const std::string& param, std::atomic_bool& completion_flag, std::atomic_bool& execution_flag );
 
-void RemoveDirectory( const std::string& directory );
+std::string select_directory( const std::string& caption );
 
-std::string GetWorkingDirectory();
+void remove_directory( const std::string& directory );
 
-void SetWorkingDirectory( const std::string& directory );
+std::string get_working_directory();
+
+void set_working_directory( const std::string& directory );
+
+}
 
 #include <System.inl>

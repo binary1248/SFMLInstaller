@@ -4,36 +4,40 @@
 
 #include "System.hpp"
 
-bool CreateDirectoryIfRequired( const std::string& directory ) {
+namespace sys {
+
+bool create_directory_if_required( const std::string& directory ) {
 	return false;
 }
 
-bool TryExecute( const std::string& executable, bool show ) {
+bool try_execute( const std::string& executable, bool show ) {
 	return false;
 }
 
-std::string GetPathFromUser( const std::string& executable ) {
+std::string get_path_from_user( const std::string& executable ) {
 	return "";
 }
 
-bool ConsoleExecute( const std::string& exec, const std::string& param, std::atomic_bool& completion_flag, std::atomic_bool& execution_flag ) {
+bool console_execute( const std::string& exec, const std::string& param, std::atomic_bool& completion_flag, std::atomic_bool& execution_flag ) {
 	return false;
 }
 
-std::string SelectDirectory( const std::string& caption ) {
+std::string select_directory( const std::string& caption ) {
 	return "";
 }
 
-void RemoveDirectory( const std::string& directory ) {
+void remove_directory( const std::string& directory ) {
 	return;
 }
 
-std::string GetWorkingDirectory() {
+std::string get_working_directory() {
 	return "";
 }
 
-void SetWorkingDirectory( const std::string& directory ) {
+void set_working_directory( const std::string& directory ) {
 	return;
+}
+
 }
 
 #error Unimplemented

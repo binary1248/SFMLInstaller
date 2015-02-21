@@ -2,4 +2,8 @@
 
 #include <string>
 
-std::string GetMakePath( bool probe = false );
+namespace make {
+
+std::string get_make_path( bool probe = false );
+
+}

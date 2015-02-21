@@ -5,16 +5,20 @@
 #include "Introspection.hpp"
 #include "System.hpp"
 
-std::string GetCMakePathFromIntrospection() {
+namespace introspection {
+
+std::string get_cmake_path_from_introspection() {
 	return "";
 }
 
-std::string GetMakePathFromIntrospection() {
+std::string get_make_path_from_introspection() {
 	return "";
 }
 
-std::string GetNMakePathFromIntrospection() {
+std::string get_nmake_path_from_introspection() {
 	return "";
+}
+
 }
 
 #error Unimplemented

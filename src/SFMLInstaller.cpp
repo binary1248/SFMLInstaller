@@ -1,8 +1,9 @@
-#include <atomic>
 #include <SFMLInstaller.hpp>
 #include <System.hpp>
+#include <atomic>
+#include <iostream>
 
-void SFMLInstaller::Process() {
+void SFMLInstaller::process() {
 ////////////////////////////////////////////////////////////////////////////////
 // Get SFML source
 ////////////////////////////////////////////////////////////////////////////////
@@ -13,7 +14,7 @@ void SFMLInstaller::Process() {
 	// Download SFML source archive.
 	if( !sfml_archive_downloaded ) {
 		std::cout << "Downloading SFML...\n";
-		Download( "codeload.github.com", 443, "/LaurentGomila/SFML/zip/master", "Downloading SFML source archive...", sfml_archive, sfml_archive_downloaded );
+		download( "codeload.github.com", 443, "/LaurentGomila/SFML/zip/master", "Downloading SFML source archive...", sfml_archive, sfml_archive_downloaded );
 
 		return;
 	}
@@ -23,7 +24,7 @@ void SFMLInstaller::Process() {
 	// Decompress SFML source archive.
 	if( !sfml_archive_decompressed ) {
 		std::cout << "Decompressing SFML...\n";
-		Decompress( sfml_archive, "", "Decompressing SFML source archive...", sfml_archive_decompressed );
+		decompress( sfml_archive, "", "Decompressing SFML source archive...", sfml_archive_decompressed );
 
 		return;
 	}
@@ -31,7 +32,7 @@ void SFMLInstaller::Process() {
 	static std::string install_location;
 
 	if( install_location.empty() ) {
-		install_location = SelectDirectory( "Where do you want to install SFML to?" );
+		install_location = sys::select_directory( "Where do you want to install SFML to?" );
 
 		if( !install_location.empty() ) {
 			std::cout << "Installing to " << install_location << "\n";
@@ -52,11 +53,11 @@ void SFMLInstaller::Process() {
 	if( !directory_adjusted ) {
 		std::cout << "Adjusting current directory...\n";
 
-		working_directory = GetWorkingDirectory();
+		working_directory = sys::get_working_directory();
 
 		std::cout << "Working directory: " << working_directory << "\n";
 
-		SetWorkingDirectory( working_directory + "/SFML-master" );
+		sys::set_working_directory( working_directory + "/SFML-master" );
 
 		directory_adjusted = true;
 	}
@@ -66,7 +67,6 @@ void SFMLInstaller::Process() {
 ////////////////////////////////////////////////////////////////////////////////
 
 	const static std::string default_settings =
-		"-D SFML_BUILD_EXAMPLES:BOOL=TRUE "
 		"-D SFML_USE_STATIC_STD_LIBS:BOOL=FALSE "
 		"-D SFML_BUILD_DOC:BOOL=FALSE "
 		"-D CMAKE_VERBOSE_MAKEFILE:BOOL=TRUE "
@@ -76,6 +76,8 @@ void SFMLInstaller::Process() {
 	const static std::string dynamic_settings = "-D BUILD_SHARED_LIBS:BOOL=TRUE ";
 	const static std::string debug_settings = "-D CMAKE_BUILD_TYPE:STRING=Debug ";
 	const static std::string release_settings = "-D CMAKE_BUILD_TYPE:STRING=Release ";
+
+	const static std::string example_settings = "-D SFML_BUILD_EXAMPLES:BOOL=TRUE ";
 
 	std::string install_prefix = "-D CMAKE_INSTALL_PREFIX:PATH=\"" + install_location + "\" ";
 	std::string settings = default_settings + install_prefix;
@@ -88,7 +90,7 @@ void SFMLInstaller::Process() {
 
 	// Run CMake to generate dynamic debug configuration.
 	if( !configured_dynamic_debug ) {
-		Configure( "dynamic debug", settings + dynamic_settings + debug_settings, configured_dynamic_debug );
+		configure( "dynamic debug", settings + dynamic_settings + debug_settings, configured_dynamic_debug );
 		return;
 	}
 
@@ -96,7 +98,7 @@ void SFMLInstaller::Process() {
 
 	// Make dynamic debug.
 	if( !built_dynamic_debug ) {
-		Build( "dynamic debug", built_dynamic_debug );
+		build( "dynamic debug", built_dynamic_debug );
 		return;
 	}
 
@@ -108,7 +110,7 @@ void SFMLInstaller::Process() {
 
 	// Run CMake to generate dynamic release configuration.
 	if( !configured_dynamic_release ) {
-		Configure( "dynamic release", settings + dynamic_settings + release_settings, configured_dynamic_release );
+		configure( "dynamic release", settings + dynamic_settings + release_settings, configured_dynamic_release );
 		return;
 	}
 
@@ -116,7 +118,7 @@ void SFMLInstaller::Process() {
 
 	// Make dynamic release.
 	if( !built_dynamic_release ) {
-		Build( "dynamic release", built_dynamic_release );
+		build( "dynamic release", built_dynamic_release );
 		return;
 	}
 
@@ -128,7 +130,7 @@ void SFMLInstaller::Process() {
 
 	// Run CMake to generate static debug configuration.
 	if( !configured_static_debug ) {
-		Configure( "static debug", settings + static_settings + debug_settings, configured_static_debug );
+		configure( "static debug", settings + static_settings + debug_settings, configured_static_debug );
 		return;
 	}
 
@@ -136,7 +138,7 @@ void SFMLInstaller::Process() {
 
 	// Make static debug.
 	if( !built_static_debug ) {
-		Build( "static debug", built_static_debug );
+		build( "static debug", built_static_debug );
 		return;
 	}
 
@@ -148,7 +150,7 @@ void SFMLInstaller::Process() {
 
 	// Run CMake to generate static release configuration.
 	if( !configured_static_release ) {
-		Configure( "static release", settings + static_settings + release_settings, configured_static_release );
+		configure( "static release", settings + static_settings + release_settings + example_settings, configured_static_release );
 		return;
 	}
 
@@ -156,7 +158,7 @@ void SFMLInstaller::Process() {
 
 	// Make static release.
 	if( !built_static_release ) {
-		Build( "static release", built_static_release );
+		build( "static release", built_static_release );
 		return;
 	}
 
@@ -168,9 +170,9 @@ void SFMLInstaller::Process() {
 
 	std::cout << "Working directory: " << working_directory << "\n";
 
-	SetWorkingDirectory( working_directory );
+	sys::set_working_directory( working_directory );
 
-	RemoveDirectory( working_directory + "/SFML-master" );
+	sys::remove_directory( working_directory + "/SFML-master" );
 
 	std::cout << "Removed temporary directories.\n";
 
@@ -180,5 +182,5 @@ void SFMLInstaller::Process() {
 
 	std::cout << "Showing completion message.\n";
 
-	Complete( "SFML installation is complete. You might want to create the environment variable SFML_ROOT and set it to\n" + install_location + " for convenience. Happy coding." );
+	complete( "SFML installation is complete. You might want to create the environment variable SFML_ROOT and set it to\n" + install_location + " for convenience. Happy coding." );
 }

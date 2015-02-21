@@ -2,6 +2,7 @@
 #error This file should not be built on a non-Win32 system.
 #endif
 
+#include <System.hpp>
 #include <windows.h>
 #include <shellapi.h>
 #include <commdlg.h>
@@ -9,11 +10,12 @@
 #include <iostream>
 #include <algorithm>
 #include <thread>
-#include <System.hpp>
 
-bool CreateDirectoryIfRequired( const std::string& directory ) {
+namespace sys {
+
+bool create_directory_if_required( const std::string& directory ) {
 	if( directory.length() > 247 ) {
-		std::cout << "CreateDirectoryIfRequired error: Path too long.\n";
+		std::cout << "create_directory_if_required error: Path too long.\n";
 	}
 
 	auto pos = directory.find( '/' );
@@ -25,7 +27,7 @@ bool CreateDirectoryIfRequired( const std::string& directory ) {
 			auto error = GetLastError();
 
 			if( error != ERROR_ALREADY_EXISTS ) {
-				std::cout << "CreateDirectoryIfRequired couldn't create directory (" << current_segment << "): " << error << "\n";
+				std::cout << "create_directory_if_required couldn't create directory (" << current_segment << "): " << error << "\n";
 				return false;
 			}
 		}
@@ -36,7 +38,7 @@ bool CreateDirectoryIfRequired( const std::string& directory ) {
 	return true;
 }
 
-bool TryExecute( const std::string& executable, bool show ) {
+bool try_execute( const std::string& executable, bool show ) {
 	auto appended_executable = executable;
 
 	if( ( appended_executable.find( ".exe" ) == std::string::npos ) && ( appended_executable.find( ".bat" ) == std::string::npos ) ) {
@@ -54,7 +56,7 @@ bool TryExecute( const std::string& executable, bool show ) {
 	return false;
 }
 
-std::string GetPathFromUser( const std::vector<std::string>& executables ) {
+std::string get_path_from_user( const std::vector<std::string>& executables ) {
 	auto strTitle = std::string{ "Where is " };
 
 	if( executables.empty() ) {
@@ -88,8 +90,8 @@ std::string GetPathFromUser( const std::vector<std::string>& executables ) {
 		strFilter += e + '\0' + e + '\0';
 	}
 
-	auto filename = CreateZeroed<TCHAR, 65536>();
-	auto open_filename = CreateZeroed<OPENFILENAME>();
+	auto filename = create_zeroed<TCHAR, 65536>();
+	auto open_filename = create_zeroed<OPENFILENAME>();
 
 	open_filename.lStructSize = sizeof( OPENFILENAME );
 	open_filename.lpstrFilter = strFilter.c_str();
@@ -98,11 +100,11 @@ std::string GetPathFromUser( const std::vector<std::string>& executables ) {
 	open_filename.lpstrTitle = strTitle.c_str();
 	open_filename.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 
-	auto working_directory = GetWorkingDirectory();
+	auto working_directory = get_working_directory();
 
 	auto result = GetOpenFileName( &open_filename );
 
-	SetWorkingDirectory( working_directory );
+	set_working_directory( working_directory );
 
 	if( !result ) {
 		return "";
@@ -111,15 +113,15 @@ std::string GetPathFromUser( const std::vector<std::string>& executables ) {
 	return std::string( filename.data() );
 }
 
-bool ConsoleExecute( const std::string& exec, const std::string& param, std::atomic_bool& completion_flag, std::atomic_bool& execution_flag ) {
-	auto startup_info = CreateZeroed<STARTUPINFO>();
-	auto process_info = CreateZeroed<PROCESS_INFORMATION>();
-	auto command_line = CreateZeroed<TCHAR, 65536>();
+bool console_execute( const std::string& exec, const std::string& param, std::atomic_bool& completion_flag, std::atomic_bool& execution_flag ) {
+	auto startup_info = create_zeroed<STARTUPINFO>();
+	auto process_info = create_zeroed<PROCESS_INFORMATION>();
+	auto command_line = create_zeroed<TCHAR, 65536>();
 
 	startup_info.cb = sizeof( STARTUPINFO );
 
 	if( ( exec + " " + param ).length() + 1 > command_line.size() ) {
-		std::cout << "ConsoleExecute error: Command line too long.\n";
+		std::cout << "console_execute error: Command line too long.\n";
 		return false;
 	}
 
@@ -128,7 +130,7 @@ bool ConsoleExecute( const std::string& exec, const std::string& param, std::ato
 	std::cout << "Executing: " << command_line.data() << "\n";
 
 	if( !CreateProcess( nullptr, command_line.data(), nullptr, nullptr, FALSE, CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &startup_info, &process_info ) ) {
-		std::cout << "ConsoleExecute error: " << GetLastError() << "\n";
+		std::cout << "console_execute error: " << GetLastError() << "\n";
 		return false;
 	}
 
@@ -149,13 +151,13 @@ bool ConsoleExecute( const std::string& exec, const std::string& param, std::ato
 	return true;
 }
 
-std::string SelectDirectory( const std::string& caption ) {
+std::string select_directory( const std::string& caption ) {
 	std::string directory;
 
 	CoInitialize( nullptr );
 
-	auto dir_string = CreateZeroed<TCHAR, MAX_PATH>();
-	auto browse_info = CreateZeroed<BROWSEINFO>();
+	auto dir_string = create_zeroed<TCHAR, MAX_PATH>();
+	auto browse_info = create_zeroed<BROWSEINFO>();
 
 	browse_info.pszDisplayName = dir_string.data();
 	browse_info.lpszTitle = caption.c_str();
@@ -176,14 +178,14 @@ std::string SelectDirectory( const std::string& caption ) {
 	return directory;
 }
 
-void RemoveDirectory( const std::string& directory ) {
+void remove_directory( const std::string& directory ) {
 	if( directory.empty() ) {
 		return;
 	}
 
 	std::cout << "Removing " << directory << "\n";
 
-	auto file_operation = CreateZeroed<SHFILEOPSTRUCT>();
+	auto file_operation = create_zeroed<SHFILEOPSTRUCT>();
 	auto from = directory;
 
 	if( from.back() == '/' ) {
@@ -199,14 +201,14 @@ void RemoveDirectory( const std::string& directory ) {
 	auto result = SHFileOperation( &file_operation );
 
 	if( result ) {
-		std::cout << "RemoveDirectory error: " << result << "\n";
+		std::cout << "remove_directory error: " << result << "\n";
 	}
 
 	std::cout << "Removed " << directory << "\n";
 }
 
-std::string GetWorkingDirectory() {
-	auto dir = CreateZeroed<TCHAR, MAX_PATH>();
+std::string get_working_directory() {
+	auto dir = create_zeroed<TCHAR, MAX_PATH>();
 
 	GetCurrentDirectory( dir.size(), dir.data() );
 
@@ -215,6 +217,8 @@ std::string GetWorkingDirectory() {
 	return dir.data();
 }
 
-void SetWorkingDirectory( const std::string& directory ) {
+void set_working_directory( const std::string& directory ) {
 	SetCurrentDirectory( directory.c_str() );
+}
+
 }

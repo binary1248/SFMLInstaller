@@ -2,12 +2,14 @@
 #error This file should not be built on a non-Win32 system.
 #endif
 
-#include <windows.h>
-#include <iostream>
 #include <Introspection.hpp>
 #include <System.hpp>
+#include <windows.h>
+#include <iostream>
 
-std::string GetCMakePathFromIntrospection() {
+namespace introspection {
+
+std::string get_cmake_path_from_introspection() {
 	auto get_path = []( HKEY root ) -> std::string {
 		HKEY kitware_key;
 
@@ -18,7 +20,7 @@ std::string GetCMakePathFromIntrospection() {
 			return "";
 		}
 
-		auto cmake_keyname = CreateZeroed<TCHAR, 256>();
+		auto cmake_keyname = sys::create_zeroed<TCHAR, 256>();
 
 		result = RegEnumKey( kitware_key, 0, cmake_keyname.data(), cmake_keyname.size() );
 
@@ -31,7 +33,7 @@ std::string GetCMakePathFromIntrospection() {
 			return "";
 		}
 
-		auto cmake_path = CreateZeroed<TCHAR, 65536>();
+		auto cmake_path = sys::create_zeroed<TCHAR, 65536>();
 		LONG cmake_path_size = cmake_path.size();
 
 		result = RegQueryValue( kitware_key, cmake_keyname.data(), cmake_path.data(), &cmake_path_size );
@@ -65,7 +67,7 @@ std::string GetCMakePathFromIntrospection() {
 	return result;
 }
 
-std::string GetMakePathFromIntrospection() {
+std::string get_make_path_from_introspection() {
 	auto get_path = []( HKEY root ) -> std::string {
 		HKEY codeblocks_key;
 
@@ -76,7 +78,7 @@ std::string GetMakePathFromIntrospection() {
 			return "";
 		}
 
-		auto make_path = CreateZeroed<TCHAR, 65536>();
+		auto make_path = sys::create_zeroed<TCHAR, 65536>();
 		DWORD make_path_size = make_path.size();
 
 		result = RegQueryValueEx( codeblocks_key, "Path", nullptr, nullptr, reinterpret_cast<LPBYTE>( make_path.data() ), &make_path_size );
@@ -106,12 +108,14 @@ std::string GetMakePathFromIntrospection() {
 	if( !result.empty() ) {
 		result += "/MinGW/bin/make";
 
-		result = TryExecute( result );
+		result = sys::try_execute( result );
 	}
 
 	return result;
 }
 
-std::string GetNMakePathFromIntrospection() {
+std::string get_nmake_path_from_introspection() {
 	return "";
+}
+
 }

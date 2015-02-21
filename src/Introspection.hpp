@@ -2,8 +2,12 @@
 
 #include <string>
 
-std::string GetCMakePathFromIntrospection();
+namespace introspection {
 
-std::string GetMakePathFromIntrospection();
+std::string get_cmake_path_from_introspection();
 
-std::string GetNMakePathFromIntrospection();
+std::string get_make_path_from_introspection();
+
+std::string get_nmake_path_from_introspection();
+
+}

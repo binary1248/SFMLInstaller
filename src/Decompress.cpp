@@ -1,10 +1,12 @@
-#include <miniz.c>
-#include <iostream>
 #include <Decompress.hpp>
 #include <System.hpp>
+#include <miniz.c>
+#include <iostream>
 
-bool DecompressArchive( const char* data, std::size_t size, const std::string& directory ) {
-	auto zip_archive = CreateZeroed<mz_zip_archive>();
+namespace decompress {
+
+bool decompress_archive( const char* data, std::size_t size, const std::string& directory ) {
+	auto zip_archive = sys::create_zeroed<mz_zip_archive>();
 
 	if( !mz_zip_reader_init_mem( &zip_archive, data, size, 0 ) ) {
 		std::cout << "mz_zip_reader_init_mem() failed!\n";
@@ -23,8 +25,8 @@ bool DecompressArchive( const char* data, std::size_t size, const std::string& d
 		if( !mz_zip_reader_is_file_a_directory( &zip_archive, i ) ) {
 			auto filename = directory + ( directory.empty() ? "" : "/" ) + file_stat.m_filename;
 
-			if( !CreateDirectoryIfRequired( filename ) ) {
-				std::cout << "DecompressArchive could not create directory.\n";
+			if( !sys::create_directory_if_required( filename ) ) {
+				std::cout << "decompress_archive could not create directory.\n";
 				return false;
 			}
 
@@ -42,4 +44,6 @@ bool DecompressArchive( const char* data, std::size_t size, const std::string& d
 	}
 
 	return true;
+}
+
 }

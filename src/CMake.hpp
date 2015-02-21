@@ -2,4 +2,8 @@
 
 #include <string>
 
-std::string GetCMakePath( bool probe = false );
+namespace cmake {
+
+std::string get_cmake_path( bool probe = false );
+
+}

@@ -1,17 +1,20 @@
-#include <iostream>
-#include <string>
 #include <Installer.hpp>
 #include <System.hpp>
 #include <Decompress.hpp>
 #include <CMake.hpp>
 #include <Make.hpp>
 #include <NMake.hpp>
+#include <SFNUL.hpp>
 #include <SFML/OpenGL.hpp>
+#include <iostream>
+#include <string>
 
-Installer::Installer() {
+Installer::Installer() :
+	m_http_client{ new sfn::HTTPClient }
+{
 	sfn::Start();
 
-	m_http_client.LoadCertificate( "codeload.github.com", sfn::TlsCertificate::Create(
+	m_http_client->LoadCertificate( "codeload.github.com", sfn::TlsCertificate::Create(
 		"-----BEGIN CERTIFICATE-----\r\n"
 		"MIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0BAQUFADBs\r\n"
 		"MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\r\n"
@@ -37,20 +40,20 @@ Installer::Installer() {
 		"-----END CERTIFICATE-----\r\n"
 	), "*github.com" );
 
-	m_working_directory = GetWorkingDirectory();
+	m_working_directory = sys::get_working_directory();
 }
 
 Installer::~Installer() {
-	SetWorkingDirectory( m_working_directory );
+	sys::set_working_directory( m_working_directory );
 
 	if( m_cmake_standalone ) {
-		RemoveDirectory( m_working_directory + "/" + m_cmake_version );
+		sys::remove_directory( m_working_directory + "/" + m_cmake_version );
 	}
 
 	sfn::Stop();
 }
 
-void Installer::Run() {
+void Installer::run() {
 	m_app_window.setFramerateLimit( 60 );
 	m_app_window.setActive();
 
@@ -69,7 +72,7 @@ void Installer::Run() {
 			}
 		}
 
-		m_http_client.Update();
+		m_http_client->Update();
 		m_desktop.Update( clock.restart().asSeconds() );
 
 		for( auto iter = std::begin( m_update_callbacks ); iter != std::end( m_update_callbacks ); ) {
@@ -84,7 +87,7 @@ void Installer::Run() {
 
 		if( !ProcessActive() ) {
 			if( EnvironmentSetup() ) {
-				Process();
+				process();
 			}
 		}
 
@@ -105,7 +108,7 @@ void Installer::Center( sfg::Widget::Ptr widget ) {
 	);
 }
 
-void Installer::Download( const std::string& host, unsigned short port, const std::string& uri, const std::string& caption, std::string& file, bool& flag ) {
+void Installer::download( const std::string& host, unsigned short port, const std::string& uri, const std::string& caption, std::string& file, bool& flag ) {
 	m_processing = true;
 
 	auto window = sfg::Window::Create( sfg::Window::BACKGROUND );
@@ -130,10 +133,10 @@ void Installer::Download( const std::string& host, unsigned short port, const st
 	request.SetMethod( "GET" );
 	request.SetHeaderValue( "Host", host );
 	request.SetURI( uri );
-	m_http_client.SendRequest( request, host, port, port == 443 );
+	m_http_client->SendRequest( request, host, port, port == 443 );
 
 	m_update_callbacks[ "Download" ] = std::make_pair( [=, &file, &flag]() {
-		auto response = m_http_client.GetResponse( request, host, port );
+		auto response = m_http_client->GetResponse( request, host, port );
 
 		if( response.IsHeaderComplete() ) {
 			auto content_length_str = response.GetHeaderValue( "Content-Length" );
@@ -149,8 +152,8 @@ void Installer::Download( const std::string& host, unsigned short port, const st
 				}
 			}
 			else {
-				m_http_client = sfn::HTTPClient{};
-				m_http_client.SendRequest( request, host, port, port == 443 );
+				m_http_client.reset( new sfn::HTTPClient );
+				m_http_client->SendRequest( request, host, port, port == 443 );
 			}
 		}
 
@@ -166,7 +169,7 @@ void Installer::Download( const std::string& host, unsigned short port, const st
 	}, true );
 }
 
-void Installer::Decompress( const std::string& file, const std::string& directory, const std::string& caption, bool& flag ) {
+void Installer::decompress( const std::string& file, const std::string& directory, const std::string& caption, bool& flag ) {
 	m_processing = true;
 
 	auto window = sfg::Window::Create( sfg::Window::BACKGROUND );
@@ -181,7 +184,7 @@ void Installer::Decompress( const std::string& file, const std::string& director
 	Center( window );
 
 	m_update_callbacks[ "Decompress" ] = std::make_pair( [=, &file, &flag]() {
-		if( DecompressArchive( file.c_str(), file.length(), directory ) ) {
+		if( decompress::decompress_archive( file.c_str(), file.length(), directory ) ) {
 			m_desktop.Remove( sfg::Widget::GetWidgetById( "Decompress" ) );
 			m_update_callbacks[ "Decompress" ].second = false;
 			m_processing = false;
@@ -195,7 +198,7 @@ void Installer::Decompress( const std::string& file, const std::string& director
 }
 
 void Installer::GetCMake() {
-	m_cmake_path = GetCMakePath( true );
+	m_cmake_path = cmake::get_cmake_path( true );
 
 	if( !m_cmake_path.empty() ) {
 		m_cmake_path = std::string( "\"" ) + m_cmake_path + "\"";
@@ -227,11 +230,11 @@ void Installer::GetCMake() {
 	box->Pack( cmake_yes_no_button_box );
 
 	cmake_installed_yes->GetSignal( sfg::Widget::OnLeftClick ).Connect( [=]() {
-		m_cmake_path = GetCMakePath( false );
+		m_cmake_path = cmake::get_cmake_path( false );
 	} );
 
 	cmake_installed_no->GetSignal( sfg::Widget::OnLeftClick ).Connect( [=]() {
-		auto current_directory = GetWorkingDirectory();
+		auto current_directory = sys::get_working_directory();
 
 		m_cmake_path = current_directory + "/" + m_cmake_version + "/bin/cmake";
 		m_cmake_standalone = true;
@@ -250,7 +253,7 @@ void Installer::GetCMake() {
 			if( m_cmake_standalone && m_cmake_archive.empty() && !ProcessActive() ) {
 				std::cout << "Downloading standalone CMake.\n";
 
-				Download( "www.cmake.org", 80, "/files/v2.8/" + m_cmake_version + ".zip", "Downloading standalone CMake archive...", m_cmake_archive, m_cmake_downloaded );
+				download( "www.cmake.org", 80, "/files/v2.8/" + m_cmake_version + ".zip", "Downloading standalone CMake archive...", m_cmake_archive, m_cmake_downloaded );
 
 				m_update_callbacks[ "DownloadStandaloneCMake" ] = std::make_pair( [=]() {
 					if( m_cmake_downloaded && !m_cmake_decompressed && !ProcessActive() ) {
@@ -259,7 +262,7 @@ void Installer::GetCMake() {
 						std::cout << "Standalone CMake download complete.\n";
 						std::cout << "Decompressing standalone CMake.\n";
 
-						Decompress( m_cmake_archive, "", "Decompressing standalone CMake archive...", m_cmake_decompressed );
+						decompress( m_cmake_archive, "", "Decompressing standalone CMake archive...", m_cmake_decompressed );
 
 						m_update_callbacks[ "DecompressStandaloneCMake" ] = std::make_pair( [=]() {
 							if( m_cmake_decompressed ) {
@@ -303,7 +306,7 @@ void Installer::GetCompiler() {
 
 	compiler_button_next->GetSignal( sfg::Widget::OnLeftClick ).Connect( [=]() {
 		if( codeblocks_mingw_radio->IsActive() ) {
-			m_compiler_exec = GetMakePath();
+			m_compiler_exec = make::get_make_path();
 
 			if( !m_compiler_exec.empty() ) {
 				m_compiler_exec = std::string( "\"" ) + m_compiler_exec + "\"";
@@ -311,7 +314,7 @@ void Installer::GetCompiler() {
 			}
 		}
 		else if( msvc_nmake_radio->IsActive() ) {
-			m_vsvars_exec = GetVSVarsPath();
+			m_vsvars_exec = nmake::get_vs_vars_path();
 
 			if( !m_vsvars_exec.empty() ) {
 				m_vsvars_exec = std::string( "\"" ) + m_vsvars_exec + "\" && ";
@@ -392,7 +395,7 @@ void Installer::SetLogCaption( const std::string& caption ) {
 	}
 }
 
-void Installer::Complete( const std::string& caption ) {
+void Installer::complete( const std::string& caption ) {
 	m_processing = true;
 
 	auto window = sfg::Window::Create( sfg::Window::BACKGROUND );
@@ -416,16 +419,16 @@ void Installer::Complete( const std::string& caption ) {
 
 	Center( window );
 
-	SetWorkingDirectory( m_working_directory );
+	sys::set_working_directory( m_working_directory );
 
 	if( m_cmake_standalone ) {
-		RemoveDirectory( m_working_directory + "/" + m_cmake_version );
+		sys::remove_directory( m_working_directory + "/" + m_cmake_version );
 
 		m_cmake_standalone = false;
 	}
 }
 
-void Installer::Configure( const std::string& label, const std::string& settings, std::atomic_bool& flag ) {
+void Installer::configure( const std::string& label, const std::string& settings, std::atomic_bool& flag ) {
 	remove( "CMakeCache.txt" );
 
 	std::string command_line = ( ( m_compiler == 1 ) ? "-G \"MinGW Makefiles\" " : "-G \"NMake Makefiles\" " );
@@ -433,7 +436,7 @@ void Installer::Configure( const std::string& label, const std::string& settings
 	command_line += settings;
 	command_line += " .";
 
-	auto result = ConsoleExecute( m_vsvars_exec + m_cmake_path, command_line, flag, m_processing );
+	auto result = sys::console_execute( m_vsvars_exec + m_cmake_path, command_line, flag, m_processing );
 
 	if( !result ) {
 		m_app_window.close();
@@ -446,8 +449,8 @@ void Installer::Configure( const std::string& label, const std::string& settings
 	SetLogCaption( caption );
 }
 
-void Installer::Build( const std::string& label, std::atomic_bool& flag ) {
-	auto result = ConsoleExecute( m_vsvars_exec + m_compiler_exec, "install", flag, m_processing );
+void Installer::build( const std::string& label, std::atomic_bool& flag ) {
+	auto result = sys::console_execute( m_vsvars_exec + m_compiler_exec, "install", flag, m_processing );
 
 	if( !result ) {
 		m_app_window.close();
