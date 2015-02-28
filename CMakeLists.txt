@@ -100,13 +100,7 @@ if( CMAKE_COMPILER_IS_GNUCXX )
 	set_target_properties( SFMLInstaller PROPERTIES LINK_FLAGS ${GNULD_FLAGS} )
 endif()
 
-target_link_libraries( SFMLInstaller ${SFNUL_LIBRARY} ${SFGUI_LIBRARY} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} )
-
-if( WIN32 )
-	target_link_libraries( SFMLInstaller ws2_32 comdlg32 ole32 )
-elseif( APPLE )
-	target_link_libraries( SFMLInstaller ${COREFOUNDATION_LIBRARY} )
-endif()
+target_link_libraries( SFMLInstaller ${SFNUL_LIBRARY} ${SFNUL_DEPENDENCIES} ${SFGUI_LIBRARY} ${SFGUI_DEPENDENCIES} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} )
 
 install(
 	TARGETS SFMLInstaller
